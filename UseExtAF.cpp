@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright © 2010 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -38,6 +38,7 @@
 			STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
 			POSSIBILITY OF SUCH DAMAGE.
 */
+
 #if !defined(__COREAUDIO_USE_FLAT_INCLUDES__)
 	#include <AudioToolbox/AudioToolbox.h>
 #else
@@ -51,6 +52,7 @@
 const UInt32 kSrcBufSize = 32768;
 
 int ConvertFile (CFURLRef					inputFileURL, 
+				CAStreamBasicDescription	&inputFormat,
 				CFURLRef					outputFileURL,
 				AudioFileTypeID				outputFileType, 
 				CAStreamBasicDescription	&outputFormat,
@@ -60,88 +62,72 @@ int ConvertFile (CFURLRef					inputFileURL,
 
 // first open the input file
 	OSStatus err = ExtAudioFileOpenURL (inputFileURL, &infile);
-	try {
-		XThrowIfError (err, "ExtAudioFileOpen");
+	XThrowIfError (err, "ExtAudioFileOpen");
+	
+	// if outputBitRate is specified, this can change the sample rate of the output file
+	// so we let this "take care of itself"
+	if (outputBitRate)
+		outputFormat.mSampleRate = 0.;
 		
-	// get the input file format
-		CAStreamBasicDescription inputFormat;
-		UInt32 size = sizeof(inputFormat);
-		err = ExtAudioFileGetProperty(infile, kExtAudioFileProperty_FileDataFormat, &size, &inputFormat);
-		XThrowIfError (err, "ExtAudioFileGetProperty kExtAudioFileProperty_FileDataFormat");
-		printf ("Source File format: "); inputFormat.Print();
-		printf ("Dest File format: "); outputFormat.Print();
-
-			// if outputBitRate is specified, this can change the sample rate of the output file
-			// so we let this "take care of itself"
-		if (outputBitRate)
-			outputFormat.mSampleRate = 0.;
-			
 	// create the output file (this will erase an exsiting file)
-		err = ExtAudioFileCreateWithURL (outputFileURL, outputFileType, &outputFormat, NULL, kAudioFileFlags_EraseFile, &outfile);
-		XThrowIfError (err, "ExtAudioFileCreateNew");
-		
+	err = ExtAudioFileCreateWithURL (outputFileURL, outputFileType, &outputFormat, NULL, kAudioFileFlags_EraseFile, &outfile);
+	XThrowIfError (err, "ExtAudioFileCreateNew");
+	
 	// get and set the client format - it should be lpcm
-		CAStreamBasicDescription clientFormat = (inputFormat.mFormatID == kAudioFormatLinearPCM ? inputFormat : outputFormat);
-		size = sizeof(clientFormat);
-		err = ExtAudioFileSetProperty(infile, kExtAudioFileProperty_ClientDataFormat, size, &clientFormat);
-		XThrowIfError (err, "ExtAudioFileSetProperty inFile, kExtAudioFileProperty_ClientDataFormat");
+	CAStreamBasicDescription clientFormat = (inputFormat.mFormatID == kAudioFormatLinearPCM ? inputFormat : outputFormat);
+	UInt32 size = sizeof(clientFormat);
+	err = ExtAudioFileSetProperty(infile, kExtAudioFileProperty_ClientDataFormat, size, &clientFormat);
+	XThrowIfError (err, "ExtAudioFileSetProperty inFile, kExtAudioFileProperty_ClientDataFormat");
+	
+	size = sizeof(clientFormat);
+	err = ExtAudioFileSetProperty(outfile, kExtAudioFileProperty_ClientDataFormat, size, &clientFormat);
+	XThrowIfError (err, "ExtAudioFileSetProperty outFile, kExtAudioFileProperty_ClientDataFormat");
+	
+	if( outputBitRate > 0 ) {
+		printf ("Dest bit rate: %d\n", (int)outputBitRate);
+		AudioConverterRef outConverter;
+		size = sizeof(outConverter);
+		err = ExtAudioFileGetProperty(outfile, kExtAudioFileProperty_AudioConverter, &size, &outConverter);
+		XThrowIfError (err, "ExtAudioFileGetProperty outFile, kExtAudioFileProperty_AudioConverter");
 		
-		size = sizeof(clientFormat);
-		err = ExtAudioFileSetProperty(outfile, kExtAudioFileProperty_ClientDataFormat, size, &clientFormat);
-		XThrowIfError (err, "ExtAudioFileSetProperty outFile, kExtAudioFileProperty_ClientDataFormat");
+		err = AudioConverterSetProperty(outConverter, kAudioConverterEncodeBitRate, 
+										sizeof(outputBitRate), &outputBitRate);
+		XThrowIfError (err, "AudioConverterSetProperty, kAudioConverterEncodeBitRate");
 		
-		if( outputBitRate > 0 ) {
-			printf ("Dest bit rate: %u\n", outputBitRate);
-			AudioConverterRef outConverter;
-			size = sizeof(outConverter);
-			err = ExtAudioFileGetProperty(outfile, kExtAudioFileProperty_AudioConverter, &size, &outConverter);
-			XThrowIfError (err, "ExtAudioFileGetProperty outFile, kExtAudioFileProperty_AudioConverter");
-			
-			err = AudioConverterSetProperty(outConverter, kAudioConverterEncodeBitRate, 
-											sizeof(outputBitRate), &outputBitRate);
-			XThrowIfError (err, "AudioConverterSetProperty, kAudioConverterEncodeBitRate");
-			
-				// we have changed the converter, so we should do this in case 
-				// setting a converter property changes the converter used by ExtAF in some manner
-			CFArrayRef config = NULL;
-			err = ExtAudioFileSetProperty(outfile, kExtAudioFileProperty_ConverterConfig, sizeof(config), &config);
-			XThrowIfError (err, "ExtAudioFileSetProperty outFile, kExtAudioFileProperty_ConverterConfig");
-		}
-		
+		// we have changed the converter, so we should do this in case 
+		// setting a converter property changes the converter used by ExtAF in some manner
+		CFArrayRef config = NULL;
+		err = ExtAudioFileSetProperty(outfile, kExtAudioFileProperty_ConverterConfig, sizeof(config), &config);
+		XThrowIfError (err, "ExtAudioFileSetProperty outFile, kExtAudioFileProperty_ConverterConfig");
+	}
+	
 	// set up buffers
-		char srcBuffer[kSrcBufSize];
+	char srcBuffer[kSrcBufSize];
 
 	// do the read and write - the conversion is done on and by the write call
-		while (1) 
-		{	
-			AudioBufferList fillBufList;
-			fillBufList.mNumberBuffers = 1;
-			fillBufList.mBuffers[0].mNumberChannels = inputFormat.mChannelsPerFrame;
-			fillBufList.mBuffers[0].mDataByteSize = kSrcBufSize;
-			fillBufList.mBuffers[0].mData = srcBuffer;
-				
-				// client format is always linear PCM - so here we determine how many frames of lpcm
-				// we can read/write given our buffer size
-			UInt32 numFrames = (kSrcBufSize / clientFormat.mBytesPerFrame);
-
-			err = ExtAudioFileRead (infile, &numFrames, &fillBufList);
-			XThrowIfError (err, "ExtAudioFileRead");	
-			if (!numFrames) {
-					// this is our termination condition
-				break;
-			}
+	while (1) 
+	{	
+		AudioBufferList fillBufList;
+		fillBufList.mNumberBuffers = 1;
+		fillBufList.mBuffers[0].mNumberChannels = inputFormat.mChannelsPerFrame;
+		fillBufList.mBuffers[0].mDataByteSize = kSrcBufSize;
+		fillBufList.mBuffers[0].mData = srcBuffer;
 			
-			err = ExtAudioFileWrite(outfile, numFrames, &fillBufList);	
-			XThrowIfError (err, "ExtAudioFileWrite");	
-		}
+		// client format is always linear PCM - so here we determine how many frames of lpcm
+		// we can read/write given our buffer size
+		UInt32 numFrames = (kSrcBufSize / clientFormat.mBytesPerFrame);
+		
+		// printf("test %d\n", numFrames);
 
-	}
-	catch (CAXException e) {
-		char buf[256];
-		fprintf(stderr, "Error: %s (%s)\n", e.mOperation, e.FormatError(buf));
-	}
-	catch (...) {
-		fprintf(stderr, "Unspecified exception\n");
+		err = ExtAudioFileRead (infile, &numFrames, &fillBufList);
+		XThrowIfError (err, "ExtAudioFileRead");	
+		if (!numFrames) {
+			// this is our termination condition
+			break;
+		}
+		
+		err = ExtAudioFileWrite(outfile, numFrames, &fillBufList);	
+		XThrowIfError (err, "ExtAudioFileWrite");	
 	}
 		
 // close

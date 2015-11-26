@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright © 2010 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -38,6 +38,7 @@
 			STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
 			POSSIBILITY OF SUCH DAMAGE.
 */
+
 #if !defined(__COREAUDIO_USE_FLAT_INCLUDES__)
 	#include <AudioToolbox/AudioToolbox.h>
 	#include <CoreFoundation/CoreFoundation.h>
@@ -74,9 +75,8 @@ OSStatus EncoderDataProc(		AudioConverterRef				inAudioConverter,
 {
 	AudioFileIO* afio = (AudioFileIO*)inUserData;
 	
-// figure out how much to read
-	UInt32 maxPackets = afio->srcBufferSize / afio->srcSizePerPacket;
-	if (*ioNumberDataPackets > maxPackets) *ioNumberDataPackets = maxPackets;
+	// figure out how much to read
+	if (*ioNumberDataPackets > afio->numPacketsPerRead) *ioNumberDataPackets = afio->numPacketsPerRead;
 
 // read from the file
 
@@ -84,7 +84,7 @@ OSStatus EncoderDataProc(		AudioConverterRef				inAudioConverter,
 	OSStatus err = AudioFileReadPackets(afio->afid, false, &outNumBytes, afio->pktDescs, 
 												afio->pos, ioNumberDataPackets, afio->srcBuffer);
 	if (err) {
-		printf ("Input Proc Read error: %ld (%4.4s)\n", err, (char*)&err);
+		printf ("Input Proc Read error: %d (%4.4s)\n", (int)err, (char*)&err);
 		return err;
 	}
 	
@@ -110,6 +110,26 @@ OSStatus EncoderDataProc(		AudioConverterRef				inAudioConverter,
 	return err;
 }
 
+void	ReadCookie (AudioConverterRef converter, AudioFileID infile)
+{
+	// for decoding, grab the cookie from the file and write it to the converter
+	UInt32 cookieSize = 0;
+	OSStatus err = AudioFileGetPropertyInfo(infile, kAudioFilePropertyMagicCookieData, &cookieSize, NULL);
+	// if there is an error here, then the format doesn't have a cookie, so on we go
+	if (!err && cookieSize) {
+		char* cookie = new char [cookieSize];
+		
+		err = AudioFileGetProperty(infile, kAudioFilePropertyMagicCookieData, &cookieSize, cookie);
+		XThrowIfError (err, "Get Cookie From File");
+		
+		err = AudioConverterSetProperty (converter, kAudioConverterDecompressionMagicCookie, cookieSize, cookie);
+		XThrowIfError (err, "Set Cookie To AudioConverter");
+		
+		delete [] cookie;
+	}
+}
+
+
 void	WriteCookie (AudioConverterRef converter, AudioFileID outfile)
 {
 // grab the cookie from the converter and write it to the file
@@ -130,6 +150,7 @@ void	WriteCookie (AudioConverterRef converter, AudioFileID outfile)
 }
 
 int ConvertFile (CFURLRef					inputFileURL, 
+				CAStreamBasicDescription	&inputFormat,
 				CFURLRef					outputFileURL,
 				AudioFileTypeID				outputFileType, 
 				CAStreamBasicDescription	&outputFormat,
@@ -139,20 +160,16 @@ int ConvertFile (CFURLRef					inputFileURL,
 	
 	OSStatus err = AudioFileOpenURL(inputFileURL, kAudioFileReadPermission, 0, &infile);
 	XThrowIfError (err, "AudioFileOpen");
-	
-// get the input file format
-	CAStreamBasicDescription inputFormat;
-	UInt32 size = sizeof(inputFormat);
-	err = AudioFileGetProperty(infile, kAudioFilePropertyDataFormat, &size, &inputFormat);
-	XThrowIfError (err, "AudioFileGetProperty kAudioFilePropertyDataFormat");
-	
-// create the AudioConverter
+		
+	// create the AudioConverter
 	AudioConverterRef converter;
 	err = AudioConverterNew(&inputFormat, &outputFormat, &converter);
 	XThrowIfError (err, "AudioConverterNew");
 
-// get the actual output format
-	size = sizeof(inputFormat);
+	ReadCookie (converter, infile);
+	
+	// get the actual output format
+	UInt32 size = sizeof(inputFormat);
 	err = AudioConverterGetProperty(converter, kAudioConverterCurrentInputStreamDescription, &size, &inputFormat);
 	XThrowIfError (err, "get kAudioConverterCurrentInputStreamDescription");
 
@@ -160,21 +177,55 @@ int ConvertFile (CFURLRef					inputFileURL,
 	err = AudioConverterGetProperty(converter, kAudioConverterCurrentOutputStreamDescription, &size, &outputFormat);
 	XThrowIfError (err, "get kAudioConverterCurrentOutputStreamDescription");
 
-	printf ("Source File format: "); inputFormat.Print();
-	printf ("Dest File format: "); outputFormat.Print();
-
     if( outputBitRate > 0 ) {
-        printf ("Dest bit rate: %u\n", outputBitRate);
+        printf ("Dest bit rate: %d\n", (int)outputBitRate);
         err = AudioConverterSetProperty(converter, kAudioConverterEncodeBitRate, 
                                         sizeof(outputBitRate), &outputBitRate);
         XThrowIfError (err, "AudioConverterSetProperty, kAudioConverterEncodeBitRate");
 	}
 
-// create the output file (this will erase an existing file)
+	// create the output file (this will erase an existing file)
 	err = AudioFileCreateWithURL(outputFileURL, outputFileType, &outputFormat, kAudioFileFlags_EraseFile, &outfile);
 	XThrowIfError (err, "AudioFileCreate");
+	
+	// mActualToBaseSampleRateRatio is just for aach, since aach has two layers
+	// the basic aac layer is of half sample rate of the aach layer
+	double mActualToBaseSampleRateRatio = 1.0; // for aach
+	CAStreamBasicDescription baseFormat;
+	UInt32 propertySize = sizeof(AudioStreamBasicDescription);
+	AudioFileGetProperty(infile, kAudioFilePropertyDataFormat, &propertySize, &baseFormat);
+	
+	if (inputFormat.mSampleRate != baseFormat.mSampleRate && inputFormat.mSampleRate != 0. && baseFormat.mSampleRate != 0.)
+		mActualToBaseSampleRateRatio = inputFormat.mSampleRate / baseFormat.mSampleRate; // should be 2.0 for aach
+	else
+		mActualToBaseSampleRateRatio = 1.0;
+	
+	double srcRatio;
+	if (outputFormat.mSampleRate != 0 && inputFormat.mSampleRate != 0) {
+		srcRatio = outputFormat.mSampleRate / inputFormat.mSampleRate;
+	} else {
+		srcRatio = 1.0;
+	}
+	
+	// if the bitstream file contains priming info, overwrite the audio converter's
+	// priming info with the one got from the bitstream to do correct trimming
+	SInt64 mDecodeValidFrames = 0;
+	AudioFilePacketTableInfo srcPti;
+	if (inputFormat.mBitsPerChannel == 0) { // input is compressed, decode to linear PCM
+		size = sizeof(srcPti);
+		err = AudioFileGetProperty(infile, kAudioFilePropertyPacketTableInfo, &size, &srcPti); // try to get priming info from bitstream file
+		if (err == noErr) { // has priming info
+			mDecodeValidFrames = (SInt64)(mActualToBaseSampleRateRatio * srcRatio * srcPti.mNumberValidFrames + 0.5);
 
-// set up buffers and data proc info struct
+			AudioConverterPrimeInfo primeInfo; // overwrite audio converter's priming info
+			primeInfo.leadingFrames = (SInt32)(srcPti.mPrimingFrames * mActualToBaseSampleRateRatio + 0.5); // overwrite the audio converter's prime info
+			primeInfo.trailingFrames = 0; // since the audio converter does not cut off trailing zeros
+			err = AudioConverterSetProperty(converter, kAudioConverterPrimeInfo, sizeof(primeInfo), &primeInfo);
+			XThrowIfError (err, "AudioConverterSetProperty, kAudioConverterPrimeInfo");
+		}
+	}
+	
+	// set up buffers and data proc info struct
 	AudioFileIO afio;
 	afio.afid = infile;
 	afio.srcBufferSize = 32768;
@@ -196,9 +247,9 @@ int ConvertFile (CFURLRef					inputFileURL,
 		afio.pktDescs = NULL;
 	}
 
-// set up our output buffers
+	// set up our output buffers
 	AudioStreamPacketDescription* outputPktDescs = NULL;
-	int outputSizePerPacket = outputFormat.mBytesPerPacket; // this will be non-zero of the format is CBR
+	int outputSizePerPacket = outputFormat.mBytesPerPacket; // this will be non-zero if the format is CBR
 	UInt32 theOutputBufSize = 32768;
 	char* outputBuffer = new char[theOutputBufSize];
 	
@@ -213,7 +264,7 @@ int ConvertFile (CFURLRef					inputFileURL,
 
 	WriteCookie (converter, outfile);
 	
-// write dest channel layout
+	// write dest channel layout
 	if (inputFormat.mChannelsPerFrame > 2) {
 		UInt32 layoutSize = 0;
 		bool layoutFromConverter = true;
@@ -239,27 +290,25 @@ int ConvertFile (CFURLRef					inputFileURL,
 			err = AudioFileSetProperty (outfile, kAudioFilePropertyChannelLayout, layoutSize, layout);
 				// even though some formats have layouts, some files don't take them
 			if (!err)
-				printf ("write channel layout to file: %ld\n", layoutSize);
+				printf ("write channel layout to file: %d\n", (int)layoutSize);
 			
 			delete [] layout;
 		}
 	}
 	
-// loop to convert data
-	UInt64 totalOutputFrames = 0;
+	// loop to convert data
 	SInt64 outputPos = 0;
 	
 	while (1) {
 
-// set up output buffer list
-	
+		// set up output buffer list
 		AudioBufferList fillBufList;
 		fillBufList.mNumberBuffers = 1;
 		fillBufList.mBuffers[0].mNumberChannels = inputFormat.mChannelsPerFrame;
 		fillBufList.mBuffers[0].mDataByteSize = theOutputBufSize;
 		fillBufList.mBuffers[0].mData = outputBuffer;
 
-// convert data
+		// convert data
 		UInt32 ioOutputDataPackets = numOutputPackets;
 		err = AudioConverterFillComplexBuffer(converter, EncoderDataProc, &afio, &ioOutputDataPackets, &fillBufList, outputPktDescs);
 		XThrowIfError (err, "AudioConverterFillComplexBuffer");	
@@ -267,51 +316,65 @@ int ConvertFile (CFURLRef					inputFileURL,
 			// this is the EOF conditon
 			break;
 		}
-
-// write to output file
+		
+		SInt64 frame1 = outputPos + ioOutputDataPackets;
+		if (mDecodeValidFrames != 0 && frame1 > mDecodeValidFrames) {
+			SInt64 framesToTrim64 = frame1 - mDecodeValidFrames;
+			UInt32 framesToTrim = (framesToTrim64 > ioOutputDataPackets) ? ioOutputDataPackets : UInt32(framesToTrim64);
+			int bytesToTrim = framesToTrim * outputFormat.mBytesPerFrame;
+			fillBufList.mBuffers[0].mDataByteSize -= bytesToTrim;
+			ioOutputDataPackets -= framesToTrim;
+		}
+		
+		// write to output file
 		UInt32 inNumBytes = fillBufList.mBuffers[0].mDataByteSize;
 		err = AudioFileWritePackets(outfile, false, inNumBytes, outputPktDescs, outputPos, &ioOutputDataPackets, outputBuffer);
 		XThrowIfError (err, "AudioFileWritePackets");	
 		
-// advance output file packet position
+		// advance output file packet position
 		outputPos += ioOutputDataPackets;
 
-//		printf ("Convert Output: Write %ld packets, size: %ld\n", ioOutputDataPackets, inNumBytes);
-		
-		if (outputFormat.mFramesPerPacket) { 
-				// this is the common case: format has constant frames per packet
-			totalOutputFrames += (ioOutputDataPackets * outputFormat.mFramesPerPacket);
-		} else {
-				// if there are variable frames per packet, then we have to do this for each packeet
-			for (unsigned int i = 0; i < ioOutputDataPackets; ++i)
-				totalOutputFrames += outputPktDescs[i].mVariableFramesInPacket;
-		}
+		// printf ("Convert Output: Write %ld packets, size: %ld\n", ioOutputDataPackets, inNumBytes);
 	}
 
-// we right out any of the leading and trailing frames for compressed formats only	
+	// we write out any of the leading and trailing frames for compressed formats only	
 	if (outputFormat.mBitsPerChannel == 0) {
-	// last job is to make sure we write out the priming and remainder details to the file
-		AudioConverterPrimeInfo primeInfo;
-		UInt32 primeSize = sizeof(primeInfo);
-
-		err = AudioConverterGetProperty(converter, kAudioConverterPrimeInfo, &primeSize, &primeInfo);
+		UInt32 isWritable;
+		err = AudioFileGetPropertyInfo(outfile, kAudioFilePropertyPacketTableInfo, &size, &isWritable);
+		if (err == noErr && isWritable) {
+			// last job is to make sure we write out the priming and remainder details to the file
+			AudioConverterPrimeInfo primeInfo;
+			UInt32 primeSize = sizeof(primeInfo);
+			
+			err = AudioConverterGetProperty(converter, kAudioConverterPrimeInfo, &primeSize, &primeInfo);
 			// if there's an error we don't care
-		if (err == noErr) {
-				// there's priming to write out to the file
-			AudioFilePacketTableInfo pti;
-			pti.mPrimingFrames = primeInfo.leadingFrames;
-			pti.mRemainderFrames = primeInfo.trailingFrames;
-			pti.mNumberValidFrames = totalOutputFrames - pti.mPrimingFrames - pti.mRemainderFrames;
-			err = AudioFileSetProperty(outfile, kAudioFilePropertyPacketTableInfo, sizeof(pti), &pti);
-				// we don't care about this err, some audio files can't contain this information
+			if (err == noErr) {
+				AudioFilePacketTableInfo pti;
+				size = sizeof(pti);
+				err = AudioFileGetProperty(outfile, kAudioFilePropertyPacketTableInfo, &size, &pti);
+				if (err == noErr) {
+					// there's priming to write out to the file
+					UInt64 totalFrames = pti.mNumberValidFrames + pti.mPrimingFrames + pti.mRemainderFrames; // get the total number of frames from the output file
+					pti.mPrimingFrames = primeInfo.leadingFrames;
+					pti.mRemainderFrames = primeInfo.trailingFrames;
+					pti.mNumberValidFrames = totalFrames - pti.mPrimingFrames - pti.mRemainderFrames; // update number of valid frames
+					err = AudioFileSetProperty(outfile, kAudioFilePropertyPacketTableInfo, sizeof(pti), &pti);
+					XThrowIfError (err, "AudioFileSetProperty, kAudioFilePropertyPacketTableInfo");
+				}
+			}
 		}
 	}
 	
-		// write the cookie again - sometimes codecs will
-		// update cookies at the end of a conversion
+	// write the cookie again - sometimes codecs will
+	// update cookies at the end of a conversion
 	WriteCookie (converter, outfile);
 
-// cleanup
+	// cleanup
+	delete [] afio.srcBuffer;
+	if (inputFormat.mBytesPerPacket == 0) {
+		delete afio.pktDescs;
+	}
+	
 	delete [] outputPktDescs;
 	delete [] outputBuffer;
 

@@ -7,238 +7,124 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		928618F50819CA3800813FBA = {
-			isa = PBXBuildFile;
-			fileRef = 928618F10819CA3800813FBA;
-		};
-		928618F60819CA3800813FBA = {
-			isa = PBXBuildFile;
-			fileRef = 928618F20819CA3800813FBA;
-		};
-		9286192F0819D47100813FBA = {
-			isa = PBXBuildFile;
-			fileRef = 9286192D0819D47100813FBA;
-		};
-		A90AEDAF08874C110039A516 = {
-			isa = PBXBuildFile;
-			fileRef = A90AEDAD08874C100039A516;
-		};
-		A90AEDB008874C110039A516 = {
-			isa = PBXBuildFile;
-			fileRef = A90AEDAE08874C100039A516;
-		};
-		A92B92FF088849FC001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A92B92FE088849FC001F57E6;
-		};
-		A92B931308884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = 928618F10819CA3800813FBA;
-		};
-		A92B931408884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A90AEDAD08874C100039A516;
-		};
-		A92B931708884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = 9286192D0819D47100813FBA;
-		};
-		A92B931808884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A94087E7083132720031D1A4;
-		};
-		A92B931A08884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = 928618F20819CA3800813FBA;
-		};
-		A92B931B08884AC1001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A90AEDAE08874C100039A516;
-		};
-		A92B936C08886619001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A92B932F08884B1E001F57E6;
-		};
-		A92B93BD08886FBE001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A92B93BC08886FBE001F57E6;
-		};
-		A92B93BE08886FBE001F57E6 = {
-			isa = PBXBuildFile;
-			fileRef = A92B93BC08886FBE001F57E6;
-		};
-		A94087E8083132720031D1A4 = {
-			isa = PBXBuildFile;
-			fileRef = A94087E7083132720031D1A4;
-		};
+		928618F50819CA3800813FBA /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 928618F10819CA3800813FBA /* CAStreamBasicDescription.cpp */; };
+		928618F60819CA3800813FBA /* CAStreamBasicDescription.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 928618F20819CA3800813FBA /* CAStreamBasicDescription.h */; };
+		9286192F0819D47100813FBA /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9286192D0819D47100813FBA /* AudioToolbox.framework */; };
+		A90AEDAF08874C110039A516 /* CAXException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A90AEDAD08874C100039A516 /* CAXException.cpp */; };
+		A90AEDB008874C110039A516 /* CAXException.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = A90AEDAE08874C100039A516 /* CAXException.h */; };
+		A92B92FF088849FC001F57E6 /* UseAC-AF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A92B92FE088849FC001F57E6 /* UseAC-AF.cpp */; };
+		A92B931308884AC1001F57E6 /* CAStreamBasicDescription.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 928618F10819CA3800813FBA /* CAStreamBasicDescription.cpp */; };
+		A92B931408884AC1001F57E6 /* CAXException.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A90AEDAD08874C100039A516 /* CAXException.cpp */; };
+		A92B931708884AC1001F57E6 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9286192D0819D47100813FBA /* AudioToolbox.framework */; };
+		A92B931808884AC1001F57E6 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A94087E7083132720031D1A4 /* CoreFoundation.framework */; };
+		A92B931A08884AC1001F57E6 /* CAStreamBasicDescription.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 928618F20819CA3800813FBA /* CAStreamBasicDescription.h */; };
+		A92B931B08884AC1001F57E6 /* CAXException.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = A90AEDAE08874C100039A516 /* CAXException.h */; };
+		A92B936C08886619001F57E6 /* UseExtAF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A92B932F08884B1E001F57E6 /* UseExtAF.cpp */; };
+		A92B93BD08886FBE001F57E6 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A92B93BC08886FBE001F57E6 /* utils.cpp */; };
+		A92B93BE08886FBE001F57E6 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A92B93BC08886FBE001F57E6 /* utils.cpp */; };
+		A94087E8083132720031D1A4 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A94087E7083132720031D1A4 /* CoreFoundation.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		8DD76F690486A84900D96B5E = {
+		8DD76F690486A84900D96B5E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				928618F60819CA3800813FBA,
-				A90AEDB008874C110039A516,
+				928618F60819CA3800813FBA /* CAStreamBasicDescription.h in CopyFiles */,
+				A90AEDB008874C110039A516 /* CAXException.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		A92B931908884AC1001F57E6 = {
+		A92B931908884AC1001F57E6 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 8;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				A92B931A08884AC1001F57E6,
-				A92B931B08884AC1001F57E6,
+				A92B931A08884AC1001F57E6 /* CAStreamBasicDescription.h in CopyFiles */,
+				A92B931B08884AC1001F57E6 /* CAXException.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8DD76F6C0486A84900D96B5E = {
-			isa = PBXFileReference;
-			explicitFileType = "compiled.mach-o.executable";
-			includeInIndex = 0;
-			path = ConvertFile;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		928618F10819CA3800813FBA = {
-			isa = PBXFileReference;
-			fileEncoding = 30;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = CAStreamBasicDescription.cpp;
-			sourceTree = "<group>";
-		};
-		928618F20819CA3800813FBA = {
-			isa = PBXFileReference;
-			fileEncoding = 30;
-			lastKnownFileType = sourcecode.c.h;
-			path = CAStreamBasicDescription.h;
-			sourceTree = "<group>";
-		};
-		9286192D0819D47100813FBA = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.framework;
-			name = AudioToolbox.framework;
-			path = /System/Library/Frameworks/AudioToolbox.framework;
-			sourceTree = "<absolute>";
-		};
-		A90AEDAD08874C100039A516 = {
-			isa = PBXFileReference;
-			fileEncoding = 30;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = CAXException.cpp;
-			sourceTree = "<group>";
-		};
-		A90AEDAE08874C100039A516 = {
-			isa = PBXFileReference;
-			fileEncoding = 30;
-			lastKnownFileType = sourcecode.c.h;
-			path = CAXException.h;
-			sourceTree = "<group>";
-		};
-		A92B92FE088849FC001F57E6 = {
-			isa = PBXFileReference;
-			fileEncoding = 30;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "UseAC-AF.cpp";
-			sourceTree = SOURCE_ROOT;
-		};
-		A92B932008884AC1001F57E6 = {
-			isa = PBXFileReference;
-			explicitFileType = "compiled.mach-o.executable";
-			includeInIndex = 0;
-			path = ConvertFile;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		A92B932F08884B1E001F57E6 = {
-			isa = PBXFileReference;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = UseExtAF.cpp;
-			sourceTree = "<group>";
-		};
-		A92B93BC08886FBE001F57E6 = {
-			isa = PBXFileReference;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = utils.cpp;
-			sourceTree = "<group>";
-		};
-		A94087E7083132720031D1A4 = {
-			isa = PBXFileReference;
-			lastKnownFileType = wrapper.framework;
-			name = CoreFoundation.framework;
-			path = /System/Library/Frameworks/CoreFoundation.framework;
-			sourceTree = "<absolute>";
-		};
+		8DD76F6C0486A84900D96B5E /* ConvertFile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ConvertFile; sourceTree = BUILT_PRODUCTS_DIR; };
+		928618F10819CA3800813FBA /* CAStreamBasicDescription.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = CAStreamBasicDescription.cpp; sourceTree = "<group>"; };
+		928618F20819CA3800813FBA /* CAStreamBasicDescription.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CAStreamBasicDescription.h; sourceTree = "<group>"; };
+		9286192D0819D47100813FBA /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = /System/Library/Frameworks/AudioToolbox.framework; sourceTree = "<absolute>"; };
+		A90AEDAD08874C100039A516 /* CAXException.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = CAXException.cpp; sourceTree = "<group>"; };
+		A90AEDAE08874C100039A516 /* CAXException.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = CAXException.h; sourceTree = "<group>"; };
+		A92B92FE088849FC001F57E6 /* UseAC-AF.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; path = "UseAC-AF.cpp"; sourceTree = SOURCE_ROOT; };
+		A92B932008884AC1001F57E6 /* ConvertFile */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ConvertFile; sourceTree = BUILT_PRODUCTS_DIR; };
+		A92B932F08884B1E001F57E6 /* UseExtAF.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UseExtAF.cpp; sourceTree = "<group>"; };
+		A92B93BC08886FBE001F57E6 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = utils.cpp; sourceTree = "<group>"; };
+		A94087E7083132720031D1A4 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = /System/Library/Frameworks/CoreFoundation.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		8DD76F660486A84900D96B5E = {
+		8DD76F660486A84900D96B5E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9286192F0819D47100813FBA,
-				A94087E8083132720031D1A4,
+				9286192F0819D47100813FBA /* AudioToolbox.framework in Frameworks */,
+				A94087E8083132720031D1A4 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A92B931608884AC1001F57E6 = {
+		A92B931608884AC1001F57E6 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A92B931708884AC1001F57E6,
-				A92B931808884AC1001F57E6,
+				A92B931708884AC1001F57E6 /* AudioToolbox.framework in Frameworks */,
+				A92B931808884AC1001F57E6 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		08FB7794FE84155DC02AAC07 = {
+		08FB7794FE84155DC02AAC07 /* convert2ima */ = {
 			isa = PBXGroup;
 			children = (
-				A92B932F08884B1E001F57E6,
-				A92B93BC08886FBE001F57E6,
-				A92B92FE088849FC001F57E6,
-				A90AEDB208874C1A0039A516,
-				A963512E0DD3A090009703E2,
-				1AB674ADFE9D54B511CA2CBB,
+				A92B932F08884B1E001F57E6 /* UseExtAF.cpp */,
+				A92B93BC08886FBE001F57E6 /* utils.cpp */,
+				A92B92FE088849FC001F57E6 /* UseAC-AF.cpp */,
+				A90AEDB208874C1A0039A516 /* PublicUtility */,
+				A963512E0DD3A090009703E2 /* Frameworks */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
 			);
 			name = convert2ima;
 			sourceTree = "<group>";
 		};
-		1AB674ADFE9D54B511CA2CBB = {
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				8DD76F6C0486A84900D96B5E,
-				A92B932008884AC1001F57E6,
+				8DD76F6C0486A84900D96B5E /* ConvertFile */,
+				A92B932008884AC1001F57E6 /* ConvertFile */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		A90AEDB208874C1A0039A516 = {
+		A90AEDB208874C1A0039A516 /* PublicUtility */ = {
 			isa = PBXGroup;
 			children = (
-				A90AEDAE08874C100039A516,
-				A90AEDAD08874C100039A516,
-				928618F10819CA3800813FBA,
-				928618F20819CA3800813FBA,
+				A90AEDAE08874C100039A516 /* CAXException.h */,
+				A90AEDAD08874C100039A516 /* CAXException.cpp */,
+				928618F10819CA3800813FBA /* CAStreamBasicDescription.cpp */,
+				928618F20819CA3800813FBA /* CAStreamBasicDescription.h */,
 			);
 			name = PublicUtility;
 			path = Extras/CoreAudio/PublicUtility;
 			sourceTree = SYSTEM_DEVELOPER_DIR;
 		};
-		A963512E0DD3A090009703E2 = {
+		A963512E0DD3A090009703E2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				9286192D0819D47100813FBA,
-				A94087E7083132720031D1A4,
+				9286192D0819D47100813FBA /* AudioToolbox.framework */,
+				A94087E7083132720031D1A4 /* CoreFoundation.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -246,13 +132,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		8DD76F620486A84900D96B5E = {
+		8DD76F620486A84900D96B5E /* UseAC-AF */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A9E1620C087B60B6006BF7C2;
+			buildConfigurationList = A9E1620C087B60B6006BF7C2 /* Build configuration list for PBXNativeTarget "UseAC-AF" */;
 			buildPhases = (
-				8DD76F640486A84900D96B5E,
-				8DD76F660486A84900D96B5E,
-				8DD76F690486A84900D96B5E,
+				8DD76F640486A84900D96B5E /* Sources */,
+				8DD76F660486A84900D96B5E /* Frameworks */,
+				8DD76F690486A84900D96B5E /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -261,16 +147,16 @@
 			name = "UseAC-AF";
 			productInstallPath = "$(HOME)/bin";
 			productName = convert2ima;
-			productReference = 8DD76F6C0486A84900D96B5E;
+			productReference = 8DD76F6C0486A84900D96B5E /* ConvertFile */;
 			productType = "com.apple.product-type.tool";
 		};
-		A92B931108884AC1001F57E6 = {
+		A92B931108884AC1001F57E6 /* UseExtAF */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A92B931C08884AC1001F57E6;
+			buildConfigurationList = A92B931C08884AC1001F57E6 /* Build configuration list for PBXNativeTarget "UseExtAF" */;
 			buildPhases = (
-				A92B931208884AC1001F57E6,
-				A92B931608884AC1001F57E6,
-				A92B931908884AC1001F57E6,
+				A92B931208884AC1001F57E6 /* Sources */,
+				A92B931608884AC1001F57E6 /* Frameworks */,
+				A92B931908884AC1001F57E6 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -279,54 +165,54 @@
 			name = UseExtAF;
 			productInstallPath = "$(HOME)/bin";
 			productName = convert2ima;
-			productReference = A92B932008884AC1001F57E6;
+			productReference = A92B932008884AC1001F57E6 /* ConvertFile */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		08FB7793FE84155DC02AAC07 = {
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
 			isa = PBXProject;
-			buildConfigurationList = A9E16210087B60B6006BF7C2;
+			buildConfigurationList = A9E16210087B60B6006BF7C2 /* Build configuration list for PBXProject "ConvertFile" */;
 			compatibilityVersion = "Xcode 2.4";
 			hasScannedForEncodings = 1;
-			mainGroup = 08FB7794FE84155DC02AAC07;
+			mainGroup = 08FB7794FE84155DC02AAC07 /* convert2ima */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				8DD76F620486A84900D96B5E,
-				A92B931108884AC1001F57E6,
+				8DD76F620486A84900D96B5E /* UseAC-AF */,
+				A92B931108884AC1001F57E6 /* UseExtAF */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
-		8DD76F640486A84900D96B5E = {
+		8DD76F640486A84900D96B5E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				928618F50819CA3800813FBA,
-				A90AEDAF08874C110039A516,
-				A92B92FF088849FC001F57E6,
-				A92B93BE08886FBE001F57E6,
+				928618F50819CA3800813FBA /* CAStreamBasicDescription.cpp in Sources */,
+				A90AEDAF08874C110039A516 /* CAXException.cpp in Sources */,
+				A92B92FF088849FC001F57E6 /* UseAC-AF.cpp in Sources */,
+				A92B93BE08886FBE001F57E6 /* utils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		A92B931208884AC1001F57E6 = {
+		A92B931208884AC1001F57E6 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A92B931308884AC1001F57E6,
-				A92B931408884AC1001F57E6,
-				A92B936C08886619001F57E6,
-				A92B93BD08886FBE001F57E6,
+				A92B931308884AC1001F57E6 /* CAStreamBasicDescription.cpp in Sources */,
+				A92B931408884AC1001F57E6 /* CAXException.cpp in Sources */,
+				A92B936C08886619001F57E6 /* UseExtAF.cpp in Sources */,
+				A92B93BD08886FBE001F57E6 /* utils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		A92B931D08884AC1001F57E6 = {
+		A92B931D08884AC1001F57E6 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -338,7 +224,7 @@
 			};
 			name = Development;
 		};
-		A92B931E08884AC1001F57E6 = {
+		A92B931E08884AC1001F57E6 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -349,7 +235,7 @@
 			};
 			name = Deployment;
 		};
-		A92B931F08884AC1001F57E6 = {
+		A92B931F08884AC1001F57E6 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -360,7 +246,7 @@
 			};
 			name = Default;
 		};
-		A9E1620D087B60B6006BF7C2 = {
+		A9E1620D087B60B6006BF7C2 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -372,7 +258,7 @@
 			};
 			name = Development;
 		};
-		A9E1620E087B60B6006BF7C2 = {
+		A9E1620E087B60B6006BF7C2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -383,7 +269,7 @@
 			};
 			name = Deployment;
 		};
-		A9E1620F087B60B6006BF7C2 = {
+		A9E1620F087B60B6006BF7C2 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_MODEL_TUNING = G5;
@@ -394,7 +280,7 @@
 			};
 			name = Default;
 		};
-		A9E16211087B60B6006BF7C2 = {
+		A9E16211087B60B6006BF7C2 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ONLY_ACTIVE_ARCH_PRE_XCODE_3_1)";
@@ -404,16 +290,17 @@
 			};
 			name = Development;
 		};
-		A9E16212087B60B6006BF7C2 = {
+		A9E16212087B60B6006BF7C2 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
 				ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1 = "ppc i386 ppc64 x86_64";
 				MACOSX_DEPLOYMENT_TARGET = 10.5;
+				ONLY_ACTIVE_ARCH = YES;
 			};
 			name = Deployment;
 		};
-		A9E16213087B60B6006BF7C2 = {
+		A9E16213087B60B6006BF7C2 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT_PRE_XCODE_3_1)";
@@ -425,37 +312,37 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A92B931C08884AC1001F57E6 = {
+		A92B931C08884AC1001F57E6 /* Build configuration list for PBXNativeTarget "UseExtAF" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A92B931D08884AC1001F57E6,
-				A92B931E08884AC1001F57E6,
-				A92B931F08884AC1001F57E6,
+				A92B931D08884AC1001F57E6 /* Development */,
+				A92B931E08884AC1001F57E6 /* Deployment */,
+				A92B931F08884AC1001F57E6 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		A9E1620C087B60B6006BF7C2 = {
+		A9E1620C087B60B6006BF7C2 /* Build configuration list for PBXNativeTarget "UseAC-AF" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A9E1620D087B60B6006BF7C2,
-				A9E1620E087B60B6006BF7C2,
-				A9E1620F087B60B6006BF7C2,
+				A9E1620D087B60B6006BF7C2 /* Development */,
+				A9E1620E087B60B6006BF7C2 /* Deployment */,
+				A9E1620F087B60B6006BF7C2 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		A9E16210087B60B6006BF7C2 = {
+		A9E16210087B60B6006BF7C2 /* Build configuration list for PBXProject "ConvertFile" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				A9E16211087B60B6006BF7C2,
-				A9E16212087B60B6006BF7C2,
-				A9E16213087B60B6006BF7C2,
+				A9E16211087B60B6006BF7C2 /* Development */,
+				A9E16212087B60B6006BF7C2 /* Deployment */,
+				A9E16213087B60B6006BF7C2 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 08FB7793FE84155DC02AAC07;
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
 }

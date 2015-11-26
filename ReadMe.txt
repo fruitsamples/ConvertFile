@@ -3,7 +3,7 @@
 ===========================================================================
 DESCRIPTION:
 
-The ConvertFile application provides sample code for converting audio data using the two main conversion mechanisms in CoreAudio: the ExtAudioFile and AudioConverter API. The projecct contains two targets, one for conversion using ExtAudioFile, and one using AudioConverter. The application provides examples of how to read in a data file, process data input arguments, and provide those to the conversion APIs.
+The ConvertFile sample demonstrates how to convert audio data using the two main conversion mechanisms in Core Audio: the Extended Audio File and Audio Converter APIs. The project contains two targets, one for conversion using an ExtAudioFile object, and one using an AudioConverter object. The application provides examples of how to read in a data file, process data input arguments, and provide those to the conversion APIs.
 
 ===========================================================================
 BUILD REQUIREMENTS:

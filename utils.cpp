@@ -1,4 +1,4 @@
-/*	Copyright © 2007 Apple Inc. All Rights Reserved.
+/*	Copyright ï¿½ 2010 Apple Inc. All Rights Reserved.
 	
 	Disclaimer: IMPORTANT:  This Apple software is supplied to you by 
 			Apple Inc. ("Apple") in consideration of your agreement to the
@@ -38,6 +38,7 @@
 			STRICT LIABILITY OR OTHERWISE, EVEN IF APPLE HAS BEEN ADVISED OF THE
 			POSSIBILITY OF SUCH DAMAGE.
 */
+
 #if !defined(__COREAUDIO_USE_FLAT_INCLUDES__)
 	#include <AudioToolbox/AudioToolbox.h>
 #else
@@ -53,6 +54,7 @@
 
 // external to this file the following function needs to be defined
 int ConvertFile (CFURLRef					inputFileURL, 
+				CAStreamBasicDescription	&inputFormat,
 				CFURLRef					outputFileURL,
 				AudioFileTypeID				outputFileType, 
 				CAStreamBasicDescription	&outputFormat,
@@ -61,14 +63,16 @@ int ConvertFile (CFURLRef					inputFileURL,
 
 void UsageString(int exitCode)
 {
-	printf ("Usage: ConvertFile /path/to/input/file [-d formatID] [-f fileType] [-r sampleRate] [-b bitrate] [-h]\n");
+	printf ("Usage: ConvertFile /path/to/input/file [-d formatID] [-r sampleRate] [-bd bitDepth] [-f fileType] [-b bitrate] [-h]\n");
 	printf ("    output file written is /tmp/outfile.<EXT FOR FORMAT>\n");
 	printf ("    if -d is specified, out file is written with that format\n");
 	printf ("       if no format is specified and input file is 'lpcm', IMA is written\n");
 	printf ("       if input file is compressed (ie. not 'lpcm'), then 'lpcm' is written\n");
 	printf ("    if -r is specified, input file's format must be ('lpcm') and output is written with new sample rate\n");
+	printf ("    if -bd is specified, input file's format must be compressed (ie. not 'lpcm') and output is written with new bit depth\n");
 	printf ("    if -f is not specified, CAF File is written ('caff')\n");
-	printf ("    if -b if specified, the bit rate for the output file when using a VBR encoder\n");
+	printf ("    if -b is specified, the bit rate for the output file when using a VBR encoder\n");
+	printf ("    if -h is specified, will print out this usage message\n");
 	exit(exitCode);
 }
 
@@ -94,10 +98,13 @@ void str2OSType (const char * inString, OSType &outType)
 	}
 
 	if (len <= 8) {
-		if (sscanf (inString, "%lx", &outType) == 0) {
+		int32_t tmp;
+		if (sscanf (inString, "%x", &tmp) == 0) {
 			printf ("* * Bad conversion for OSType\n"); 
 			UsageString(1);
 		}
+		outType = tmp;
+		
 		return;
 	}
 	printf ("* * Bad conversion for OSType\n"); 
@@ -110,11 +117,17 @@ void ParseArgs (int argc, char * const argv[],
 					OSType	&			outFileType,
 					CFURLRef&			outInputFileURL,
 					CFURLRef&			outOutputFileURL,
+					UInt32  &			outBitDepth,
 					UInt32  &			outBitRate)
 {
 	if (argc < 2) {
 		printf ("No Input File specified\n");
 		UsageString(1);
+	}
+	
+	// support "ConvertFile -h" usage
+	if (argc == 2 && !strcmp("-h", argv[1])) {
+		UsageString(0);
 	}
 	
 	// first validate our initial condition
@@ -127,7 +140,8 @@ void ParseArgs (int argc, char * const argv[],
     }
 	
 	outBitRate = 0;
-
+	outBitDepth = 0;
+	
 	// look to see if a format or different file output has been specified
 	for (int i = 2; i < argc; ++i) {
 		if (!strcmp ("-d", argv[i])) {
@@ -138,11 +152,18 @@ void ParseArgs (int argc, char * const argv[],
 			sscanf (argv[++i], "%lf", &outSampleRate);
 			outFormat = 0;
 		}
-		else if (!strcmp ("-b", argv[i])) {
-			sscanf (argv[++i], "%u", &outBitRate);
+		else if (!strcmp("-bd", argv[i])) {
+			int temp;
+			sscanf (argv[++i], "%d", &temp);
+			outBitDepth = temp;
 		}
 		else if (!strcmp ("-f", argv[i])) {
 			str2OSType (argv[++i], outFileType);
+		}
+		else if (!strcmp ("-b", argv[i])) {
+			int temp;
+			sscanf (argv[++i], "%u", &temp);
+			outBitRate = temp;
 		}
 		else if (!strcmp ("-h", argv[i])) {
 			UsageString(0);
@@ -181,24 +202,74 @@ void ParseArgs (int argc, char * const argv[],
 #endif
 	outOutputFileURL = CFURLCreateFromFileSystemRepresentation (kCFAllocatorDefault, (const UInt8 *)outFname, strlen(outFname), false);
 	if (!outOutputFileURL) {
-		printf ("* * Bad input file path\n"); 
+		printf ("* * Bad output file path\n"); 
 		UsageString(1);
     }
 }
 
+void	GetFormatFromInputFile (AudioFileID inputFile, CAStreamBasicDescription & inputFormat)
+{
+	bool doPrint = true;
+	UInt32 size;
+	XThrowIfError(AudioFileGetPropertyInfo(inputFile, 
+								kAudioFilePropertyFormatList, &size, NULL), "couldn't get file's format list info");
+	UInt32 numFormats = size / sizeof(AudioFormatListItem);
+	AudioFormatListItem *formatList = new AudioFormatListItem [ numFormats ];
 
-void	ConstructOutputFormatFromArgs (CFURLRef inputFileURL, OSType fileType, OSType format, Float64 sampleRate, 
-														CAStreamBasicDescription &outputFormat)
+	XThrowIfError(AudioFileGetProperty(inputFile, 
+								kAudioFilePropertyFormatList, &size, formatList), "couldn't get file's data format");
+	numFormats = size / sizeof(AudioFormatListItem); // we need to reassess the actual number of formats when we get it
+	if (numFormats == 1) {
+			// this is the common case
+		inputFormat = formatList[0].mASBD;
+	} else {
+		if (doPrint) {
+			printf ("File has a %d layered data format:\n", (int)numFormats);
+			for (unsigned int i = 0; i < numFormats; ++i)
+				CAStreamBasicDescription(formatList[i].mASBD).Print();
+			printf("\n");
+		}
+		// now we should look to see which decoders we have on the system
+		XThrowIfError(AudioFormatGetPropertyInfo(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &size), "couldn't get decoder id's");
+		UInt32 numDecoders = size / sizeof(OSType);
+		OSType *decoderIDs = new OSType [ numDecoders ];
+		XThrowIfError(AudioFormatGetProperty(kAudioFormatProperty_DecodeFormatIDs, 0, NULL, &size, decoderIDs), "couldn't get decoder id's");			
+		unsigned int i = 0;
+		for (; i < numFormats; ++i) {
+			OSType decoderID = formatList[i].mASBD.mFormatID;
+			bool found = false;
+			for (unsigned int j = 0; j < numDecoders; ++j) {
+				if (decoderID == decoderIDs[j]) {
+					found = true;
+					break;
+				}
+			}
+			if (found) break;
+		}
+		delete [] decoderIDs;
+		
+		if (i >= numFormats) {
+			fprintf (stderr, "Cannot play any of the formats in this file\n");
+			throw kAudioFileUnsupportedDataFormatError;
+		}
+		inputFormat = formatList[i].mASBD;
+	}
+	delete [] formatList;
+}
+
+
+void	ConstructOutputFormatFromArgs (	CFURLRef inputFileURL, 
+										OSType fileType, OSType format, Float64 sampleRate, 
+										CAStreamBasicDescription &inputFormat, 
+										UInt32 bitDepth, 
+										CAStreamBasicDescription &outputFormat)
 {
 	AudioFileID infile;	
 	OSStatus err = AudioFileOpenURL(inputFileURL, kAudioFileReadPermission, 0, &infile);
 	XThrowIfError (err, "AudioFileOpen");
 	
 // get the input file format
-	CAStreamBasicDescription inputFormat;
-	UInt32 size = sizeof(inputFormat);
-	err = AudioFileGetProperty(infile, kAudioFilePropertyDataFormat, &size, &inputFormat);
-	XThrowIfError (err, "AudioFileGetProperty kAudioFilePropertyDataFormat");
+	GetFormatFromInputFile (infile, inputFormat);
 
 	if (inputFormat.mFormatID != kAudioFormatLinearPCM && sampleRate > 0) {
 		printf ("Can only specify sample rate with linear pcm input file\n");
@@ -223,11 +294,11 @@ void	ConstructOutputFormatFromArgs (CFURLRef inputFileURL, OSType fileType, OSTy
 			outputFormat.mFormatID = format;
 			outputFormat.mSampleRate = inputFormat.mSampleRate;
 			outputFormat.mChannelsPerFrame = inputFormat.mChannelsPerFrame;
+			outputFormat.mBitsPerChannel = (bitDepth) ? bitDepth : 16;
 
-			outputFormat.mBytesPerPacket = inputFormat.mChannelsPerFrame * 2;
+			outputFormat.mBytesPerPacket = inputFormat.mChannelsPerFrame * (outputFormat.mBitsPerChannel / 8);
 			outputFormat.mFramesPerPacket = 1;
 			outputFormat.mBytesPerFrame = outputFormat.mBytesPerPacket;
-			outputFormat.mBitsPerChannel = 16;
 	
 			if (fileType == kAudioFileWAVEType)
 				outputFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger
@@ -245,12 +316,11 @@ void	ConstructOutputFormatFromArgs (CFURLRef inputFileURL, OSType fileType, OSTy
 			outputFormat.mChannelsPerFrame = inputFormat.mChannelsPerFrame;
 			
 		// use AudioFormat API to fill out the rest.
-			size = sizeof(outputFormat);
+			UInt32 size = sizeof(outputFormat);
 			err = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &outputFormat);
             XThrowIfError (err, "AudioFormatGetProperty kAudioFormatProperty_FormatInfo");
 		}
 	}
-	
 	AudioFileClose (infile);
 }
 
@@ -284,27 +354,31 @@ int main (int argc, char * const argv[])
 		Float64 sampleRate = 0;
 		AudioFileTypeID outputFileType = kAudioFileCAFType;
  	  	UInt32 outputBitRate;
+		UInt32 outputBitDepth;
 		
-		ParseArgs (argc, argv, format, sampleRate, outputFileType, inputFileURL, outputFileURL, outputBitRate);
+		ParseArgs (argc, argv, format, sampleRate, outputFileType, inputFileURL, outputFileURL, outputBitDepth, outputBitRate);
 
 	//	printf ("args:%4.4s, sample rate:%.1f, outputFileType: %4.4s\n", (char*)&format, sampleRate, (char*)&outputFileType);
 
+		CAStreamBasicDescription inputFormat;	
 		CAStreamBasicDescription outputFormat;	
-		ConstructOutputFormatFromArgs (inputFileURL, outputFileType, format, sampleRate, outputFormat);
+		ConstructOutputFormatFromArgs (inputFileURL, outputFileType, format, sampleRate, inputFormat, outputBitDepth, outputFormat);
 		
-	//	outputFormat.Print();
+		printf ("Source File format:\n\t"); inputFormat.Print();
+		printf ("Dest File format:\n\t"); outputFormat.Print();
 		
-		result = ConvertFile (inputFileURL, outputFileURL, outputFileType, outputFormat, outputBitRate);
+		result = ConvertFile (inputFileURL, inputFormat, outputFileURL, outputFileType, outputFormat, outputBitRate);
 
 		CFStringRef path = CFURLCopyPath(outputFileURL);
-		printf("done: ");fflush(stdout); CFShow(path);
-		CFRelease(path);
+		printf("done: "); fflush(stdout); CFShow(path);
+		if (path) CFRelease(path);
 
 	} catch (CAXException e) {
-		char str[32];
-		printf ("Exception thrown: %s\n", e.FormatError(str));
+		char buf[256];
+		fprintf(stderr, "Error in: %s\nException thrown: %s\n", e.mOperation, e.FormatError(buf));
 		result = 1;
 	} catch (...) {
+		fprintf(stderr, "Unspecified exception\n");
 		result = 1;
 	}
 	if (inputFileURL) CFRelease(inputFileURL);
